@@ -2,9 +2,15 @@
 import numpy as np
 
 
-def linearRegression(alpha=0.01, num_iters=400):
-    data = np.loadtxt("data.txt", delimiter=",", dtype=np.float64)  # 读取数据
-    X = data[:, 0:-1]  # X对应0到倒数第2列
+
+def sigmoid(z):
+    h = 1.0 / (1.0 + np.exp(-z))
+    return h
+
+
+def logisticRegression(alpha=0.01, num_iters=400):
+    data = np.loadtxt("data1.txt", delimiter=",", dtype=np.float64)  # 读取数据
+    X = data[:, 0:-1]  # X对应0到倒数第2列z
     y = data[:, -1]  # y对应最后一列
     row = len(y)  # 总的数据条数
     col = data.shape[1]  # data的列数
@@ -14,14 +20,10 @@ def linearRegression(alpha=0.01, num_iters=400):
     print(u"\n执行梯度下降算法....\n")
     theta = np.zeros((col, 1))
     y = y.reshape(-1, 1)  # 将行向量转化为列
+    plot_data(X,y)
     theta, J_history = gradientDescent(X, y, theta, alpha, num_iters)
-    theta2=np.zeros((col, 1))
-    if(np.linalg.det(np.dot(X.transpose(),X))!=0):
-        mul=np.dot(X.transpose(), X)
-        mul=np.linalg.inv(mul)
-        mul2=np.dot(np.transpose(X), y)
-        theta2=np.dot(mul,mul2)
-    return mu, sigma, theta,theta2  # 返回均值mu,标准差sigma,和学习的结果theta
+    plotBestFit(theta,X,y)
+    return mu, sigma, theta  # 返回均值mu,标准差sigma,和学习的结果theta
 
 
 # 归一化feature
@@ -49,8 +51,8 @@ def gradientDescent(X, y, theta, alpha, num_iters):
     #temp = np.zeros((n, num_iters))
     J_history = np.zeros((num_iters, 1))  # 记录每次迭代计算的代价值
     for i in range(num_iters):  # 遍历迭代次数    
-        h = np.dot(X, theta)  # 计算内积，matrix可以直接乘
-        temp = theta - ((alpha ) * (np.dot(np.transpose(X), h - y)))  # 梯度的计算
+        h = sigmoid(np.dot(X, theta))  # 计算内积，matrix可以直接乘
+        temp = theta - (alpha  * (np.dot(np.transpose(X), h - y)))  # 梯度的计算
         theta = temp
         J_history[i] = computerCost(X, y, theta)  # 调用计算代价函数
         print('.', end=' ')
@@ -72,21 +74,48 @@ def computerCost(X, y, theta):
 def predict(mu, sigma, theta):
     result = 0
     # 注意归一化
-    predict = np.array([2132,4])
+    predict = np.array([61.10666453684766,96.51142588489624])
     norm_predict = (predict - mu) / sigma
     final_predict = np.hstack((np.ones((1)), norm_predict))
-    result = np.dot(final_predict, theta)  # 预测结果
+    result = sigmoid(np.dot(final_predict, theta))  # 预测结果
 
-    return result
+    if (result >= 0.5):
+        type = 1
+    else:
+        type = 0
+    return result,type
 
 
+import matplotlib.pyplot as plt
+def plot_data(X,y):
+    pos = np.where(y==1)    #找到y==1的坐标位置
+    neg = np.where(y==0)    #找到y==0的坐标位置
+    #作图
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X[pos,1],X[pos,2], s=20, c='r', marker='s')
+    ax.scatter(X[neg,1],X[neg,2], s=20, c='g')
+    plt.title('OriginalData')
+    plt.show()
+def plotBestFit(wei,X,Y):
+    pos = np.where(Y == 1)  # 找到y==1的坐标位置
+    neg = np.where(Y == 0)  # 找到y==0的坐标位置
+    # 作图
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X[pos, 1], X[pos, 2], s=20, c='r', marker='s')
+    ax.scatter(X[neg, 1], X[neg, 2], s=20, c='g')
+    x = np.arange(-3.0, 3.0, 0.1)  # 直线x坐标的取值范围
+    y = (-wei[0] - wei[1] * x) / wei[2]  # 直线方程
+    plt.title('DataSet')
+    ax.plot(x, y)
+    plt.xlabel('X1');
+    plt.ylabel('X2');
+    plt.show()
 if __name__ == "__main__":
-    mu, sigma, theta, theta2 = linearRegression(0.01, 400)
+    mu, sigma, theta = logisticRegression(0.01, 400)
     # print u"\n计算的theta值为：\n",theta
     # print u"\n预测结果为：%f"%predict(mu, sigma, theta)
     print("\ntheta1:", theta)
-    print("\ntheta2:", theta2)
-    result = predict(mu, sigma, theta)
-    print("\nresult of theta1:", result)
-    result = predict(mu, sigma, theta2)
-    print("\nresult of theta2:", result)
+    result,type = predict(mu, sigma, theta)
+    print("\n prob:", result," type:",type)

@@ -52,7 +52,7 @@ def gradientDescent(X, y, theta, alpha, num_iters,lamada=1):
     for i in range(num_iters):  # 遍历迭代次数
         h = np.dot(X, theta)  # 计算内积，matrix可以直接乘
         normal=lamada*np.identity(X.shape[1])
-        temp = theta - ((alpha / m) * (np.dot(np.transpose(X), h - y)+np.dot(normal,theta)))  # 梯度的计算
+        temp = theta - ((alpha) * (np.dot(np.transpose(X), h - y)+np.dot(normal,theta)))  # 梯度的计算
         theta = temp
         J_history[i] = computerCost(X, y, theta)  # 调用计算代价函数
         print('.', end=' ')
